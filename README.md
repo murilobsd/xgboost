@@ -1,69 +1,93 @@
-<img src=https://raw.githubusercontent.com/dmlc/dmlc.github.io/master/img/logo-m/xgboost.png width=135/>  eXtreme Gradient Boosting
-===========
-[![Build Status](https://xgboost-ci.net/job/xgboost/job/master/badge/icon)](https://xgboost-ci.net/blue/organizations/jenkins/xgboost/activity)
-[![Build Status](https://img.shields.io/travis/dmlc/xgboost.svg?label=build&logo=travis&branch=master)](https://travis-ci.org/dmlc/xgboost)
-[![XGBoost-CI](https://github.com/dmlc/xgboost/workflows/XGBoost-CI/badge.svg?branch=master)](https://github.com/dmlc/xgboost/actions)
-[![Documentation Status](https://readthedocs.org/projects/xgboost/badge/?version=latest)](https://xgboost.readthedocs.org)
-[![GitHub license](http://dmlc.github.io/img/apache2.svg)](./LICENSE)
-[![CRAN Status Badge](http://www.r-pkg.org/badges/version/xgboost)](http://cran.r-project.org/web/packages/xgboost)
-[![PyPI version](https://badge.fury.io/py/xgboost.svg)](https://pypi.python.org/pypi/xgboost/)
-[![Conda version](https://img.shields.io/conda/vn/conda-forge/py-xgboost.svg)](https://anaconda.org/conda-forge/py-xgboost)
-[![Optuna](https://img.shields.io/badge/Optuna-integrated-blue)](https://optuna.org)
-[![Twitter](https://img.shields.io/badge/@XGBoostProject--_.svg?style=social&logo=twitter)](https://twitter.com/XGBoostProject)
+## Compilando
 
-[Community](https://xgboost.ai/community) |
-[Documentation](https://xgboost.readthedocs.org) |
-[Resources](demo/README.md) |
-[Contributors](CONTRIBUTORS.md) |
-[Release Notes](NEWS.md)
+```
+git clone --recursive https://github.com/murilobsd/xgboost
+cd xgboost
+mkdir build
+cd build
+cmake
+make -j4
+```
 
-XGBoost is an optimized distributed gradient boosting library designed to be highly ***efficient***, ***flexible*** and ***portable***.
-It implements machine learning algorithms under the [Gradient Boosting](https://en.wikipedia.org/wiki/Gradient_boosting) framework.
-XGBoost provides a parallel tree boosting (also known as GBDT, GBM) that solve many data science problems in a fast and accurate way.
-The same code runs on major distributed environment (Kubernetes, Hadoop, SGE, MPI, Dask) and can solve problems beyond billions of examples.
+## Testando ambientes
 
-License
--------
-© Contributors, 2021. Licensed under an [Apache-2](https://github.com/dmlc/xgboost/blob/master/LICENSE) license.
+Será criado a biblioteca na pasta lib/, como essa biblioteca não tem
+nenhuma otimização como GPU, OPENSMP, faremos uma copia da mesma para
+simular a versão do xgboost em python e em cython, para isso digite
+os comandos abaixo:
 
-Contribute to XGBoost
----------------------
-XGBoost has been developed and used by a group of active community members. Your help is very valuable to make the package better for everyone.
-Checkout the [Community Page](https://xgboost.ai/community).
+```
+# isso pode variar de acordo com o sistema operacional
+# por exemplo no windows pode ser lib/xgboost.dll
 
-Reference
----------
-- Tianqi Chen and Carlos Guestrin. [XGBoost: A Scalable Tree Boosting System](http://arxiv.org/abs/1603.02754). In 22nd SIGKDD Conference on Knowledge Discovery and Data Mining, 2016
-- XGBoost originates from research project at University of Washington.
+cp lib/libxgboost.so lib/libcythonize_xgboost.so
 
-Sponsors
---------
-Become a sponsor and get a logo here. See details at [Sponsoring the XGBoost Project](https://xgboost.ai/sponsors). The funds are used to defray the cost of continuous integration and testing infrastructure (https://xgboost-ci.net).
+# Abra outro terminal e crie um ambiente virtual
+# fora da pasta do projeto (pasta clonada) isso porque
+# iremos acessar uma outra branch o que pode destruir seu
+# ambiente virtual.
+mkdir -p ~/src/python
+cd ~/src/python
+python3 -m venv venv # criamos um ambiente virtual
+```
 
-## Open Source Collective sponsors
-[![Backers on Open Collective](https://opencollective.com/xgboost/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/xgboost/sponsors/badge.svg)](#sponsors)
+### Python puro
 
-### Sponsors
-[[Become a sponsor](https://opencollective.com/xgboost#sponsor)]
+Acesse a pasta python-packages do projeto e ative ambiente virtual
+criado anteriormente
 
-<!--<a href="https://opencollective.com/xgboost/sponsor/0/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/0/avatar.svg"></a>-->
-<a href="https://www.nvidia.com/en-us/" target="_blank"><img src="https://raw.githubusercontent.com/xgboost-ai/xgboost-ai.github.io/master/images/sponsors/nvidia.jpg" alt="NVIDIA" width="72" height="72"></a>
-<a href="https://opencollective.com/xgboost/sponsor/1/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/1/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/2/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/2/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/3/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/3/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/4/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/4/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/5/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/5/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/6/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/6/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/7/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/7/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/8/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/8/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/9/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/9/avatar.svg"></a>
+```
+cd python-packages/
+. ~/src/python/venv/bin/activate # isso pode variar de SO para SO
+python setup.py install
+```
 
-### Backers
-[[Become a backer](https://opencollective.com/xgboost#backer)]
+Testando:
 
-<a href="https://opencollective.com/xgboost#backers" target="_blank"><img src="https://opencollective.com/xgboost/backers.svg?width=890"></a>
+Quando passamos nenhum argumento a esse script ele usa a versão original do 
+xgboost
 
-## Other sponsors
-The sponsors in this list are donating cloud hours in lieu of cash donation.
+```
+./test_benchmark.py
+```
 
-<a href="https://aws.amazon.com/" target="_blank"><img src="https://raw.githubusercontent.com/xgboost-ai/xgboost-ai.github.io/master/images/sponsors/aws.png" alt="Amazon Web Services" width="72" height="72"></a>
+### Cython
+
+Baixa as branches remotas, acesse a branch **cythonize** depois acesse a 
+pasta python-packages do projeto e ative ambiente virtual criado anteriormente
+
+```
+git fetch -a
+git checkout cythonize
+cd python-packages/
+. ~/src/python/venv/bin/activate # isso pode variar de SO para SO
+python setup.py build_ext --inplace
+python setup.py install
+```
+
+Agora iremos fazer o processo manualmente no futuro será feito um script
+para isso. Nós iremos copiar alguns arquivos para dentro de nosso ambiente
+virtual para criar o pacote final chamado **cythonize_xgboost**.
+
+```
+cp cythonize_xgboost/config.py ~/src/python/venv/lib/python3.9/site-packages/cythonize_xgboost/
+cp cythonize_xgboost/VERSION ~/src/python/venv/lib/python3.9/site-packages/cythonize_xgboost/
+mkdir ~/src/python/venv/lib/python3.9/site-packages/cythonize_xgboost/lib
+cp ../lib/libcythonize_xgboost.so ~/src/python/venv/lib/python3.9/site-packages/cythonize_xgboost/lib
+```
+
+Testando:
+
+Quando passamos nenhum argumento a esse script ele usa a versão original do 
+xgboost
+
+```
+./test_benchmark.py "cythonize"
+```
+
+Eu recomendo o uso do hyperfine para gerar o benchmark, o software é específico para isso com
+inúmeras features. Por exemplo poderia ser usado da seguinte forma
+
+```
+hyperfine --warmup 5 "./test_bench.py" "./test_bench.py 'cythonize'"
+```
