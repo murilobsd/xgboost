@@ -8,6 +8,7 @@ import sys
 from platform import system
 from setuptools import setup, find_packages, Extension
 from setuptools.command import build_ext, sdist, install_lib, install
+from Cython.Build import cythonize
 
 # You can't use `pip install .` as pip copies setup.py to a temporary
 # directory, parent directory is no longer reachable (isolated build) .
@@ -17,7 +18,7 @@ sys.path.insert(0, CURRENT_DIR)
 # Options only effect `python setup.py install`, building `bdist_wheel`
 # requires using CMake directly.
 USER_OPTIONS = {
-    # libxgboost options.
+    # libcythonize_xgboost options.
     'use-openmp': (None, 'Build with OpenMP support.', 1),
     'use-cuda':   (None, 'Build with GPU acceleration.', 0),
     'use-nccl':   (None, 'Build with NCCL to enable distributed GPU support.', 0),
@@ -28,7 +29,7 @@ USER_OPTIONS = {
     'use-s3':     (None, 'Build with S3 support', 0),
     'plugin-dense-parser': (None, 'Build dense parser plugin.', 0),
     # Python specific
-    'use-system-libxgboost': (None, 'Use libxgboost.so in system path.', 0)
+    'use-system-libcythonize-xgboost': (None, 'Use libcythonize_xgboost.so in system path.', 0)
 }
 
 NEED_CLEAN_TREE = set()
@@ -39,9 +40,9 @@ BUILD_TEMP_DIR = None
 def lib_name():
     '''Return platform dependent shared object name.'''
     if system() == 'Linux' or system().upper().endswith('BSD'):
-        name = 'libxgboost.so'
+        name = 'libcythonize_xgboost.so'
     elif system() == 'Darwin':
-        name = 'libxgboost.dylib'
+        name = 'libcythonize_xgboost.dylib'
     elif system() == 'Windows':
         name = 'xgboost.dll'
     return name
@@ -124,17 +125,17 @@ class BuildExt(build_ext.build_ext):  # pylint: disable=too-many-ancestors
 
     def build_cmake_extension(self):
         '''Configure and build using CMake'''
-        if USER_OPTIONS['use-system-libxgboost'][2]:
-            self.logger.info('Using system libxgboost.')
+        if USER_OPTIONS['use-system-libcythonize-xgboost'][2]:
+            self.logger.info('Using system libcythonize_xgboost.')
             return
 
         build_dir = self.build_temp
         global BUILD_TEMP_DIR  # pylint: disable=global-statement
         BUILD_TEMP_DIR = build_dir
-        libxgboost = os.path.abspath(
+        libcythonize_xgboost = os.path.abspath(
             os.path.join(CURRENT_DIR, os.path.pardir, 'lib', lib_name()))
 
-        if os.path.exists(libxgboost):
+        if os.path.exists(libcythonize_xgboost):
             self.logger.info('Found shared library, skipping build.')
             return
 
@@ -145,7 +146,7 @@ class BuildExt(build_ext.build_ext):  # pylint: disable=too-many-ancestors
         except Exception:  # pylint: disable=broad-except
             copy_tree(src_dir, os.path.join(self.build_temp, src_dir))
 
-        self.logger.info('Building from source. %s', libxgboost)
+        self.logger.info('Building from source. %s', libcythonize_xgboost)
         if not os.path.exists(build_dir):
             os.mkdir(build_dir)
         if shutil.which('ninja'):
@@ -199,13 +200,13 @@ class Sdist(sdist.sdist):       # pylint: disable=too-many-ancestors
     def run(self):
         copy_tree(os.path.join(CURRENT_DIR, os.path.pardir),
                   os.path.join(CURRENT_DIR, 'xgboost'))
-        libxgboost = os.path.join(
+        libcythonize_xgboost = os.path.join(
             CURRENT_DIR, os.path.pardir, 'lib', lib_name())
-        if os.path.exists(libxgboost):
+        if os.path.exists(libcythonize_xgboost):
             self.logger.warning(
                 'Found shared library, removing to avoid being included in source distribution.'
             )
-            os.remove(libxgboost)
+            os.remove(libcythonize_xgboost)
         super().run()
 
 
@@ -216,10 +217,10 @@ class InstallLib(install_lib.install_lib):
     def install(self):
         outfiles = super().install()
 
-        if USER_OPTIONS['use-system-libxgboost'][2] != 0:
-            self.logger.info('Using system libxgboost.')
+        if USER_OPTIONS['use-system-libcythonize-xgboost'][2] != 0:
+            self.logger.info('Using system libcythonize_xgboost.')
             lib_path = os.path.join(sys.prefix, 'lib')
-            msg = 'use-system-libxgboost is specified, but ' + lib_name() + \
+            msg = 'use-system-libcythonize-xgboost is specified, but ' + lib_name() + \
                 ' is not found in: ' + lib_path
             assert os.path.exists(os.path.join(lib_path, lib_name())), msg
             return []
@@ -229,18 +230,18 @@ class InstallLib(install_lib.install_lib):
             os.mkdir(lib_dir)
         dst = os.path.join(self.install_dir, 'xgboost', 'lib', lib_name())
 
-        libxgboost_path = lib_name()
+        libcythonize_xgboost_path = lib_name()
 
         assert BUILD_TEMP_DIR is not None
         dft_lib_dir = os.path.join(CURRENT_DIR, os.path.pardir, 'lib')
         build_dir = os.path.join(BUILD_TEMP_DIR, 'xgboost', 'lib')
 
-        if os.path.exists(os.path.join(dft_lib_dir, libxgboost_path)):
+        if os.path.exists(os.path.join(dft_lib_dir, libcythonize_xgboost_path)):
             # The library is built by CMake directly
-            src = os.path.join(dft_lib_dir, libxgboost_path)
+            src = os.path.join(dft_lib_dir, libcythonize_xgboost_path)
         else:
             # The library is built by setup.py
-            src = os.path.join(build_dir, libxgboost_path)
+            src = os.path.join(build_dir, libcythonize_xgboost_path)
         self.logger.info('Installing shared library: %s', src)
         dst, _ = self.copy_file(src, dst)
         outfiles.append(dst)
@@ -269,7 +270,7 @@ class Install(install.install):  # pylint: disable=too-many-instance-attributes
 
         self.plugin_dense_parser = 0
 
-        self.use_system_libxgboost = 0
+        self.use_system_libcythonize_xgboost = 0
 
     def run(self):
         # setuptools will configure the options according to user supplied command line
@@ -305,7 +306,7 @@ if __name__ == '__main__':
     with open(os.path.join(CURRENT_DIR, 'xgboost/VERSION'), encoding="ascii") as fd:
         version = fd.read().strip()
 
-    setup(name='xgboost',
+    setup(name='cythonize_xgboost',
           version=version,
           description="XGBoost Python Package",
           long_description=description,
@@ -314,7 +315,7 @@ if __name__ == '__main__':
               'numpy',
               'scipy',
           ],
-          ext_modules=[CMakeExtension('libxgboost')],
+          ext_modules=cythonize([CMakeExtension('libxgboost'), Extension("*", ["cythonize_xgboost/*.pyx"])]),
           cmdclass={
               'build_ext': BuildExt,
               'sdist': Sdist,

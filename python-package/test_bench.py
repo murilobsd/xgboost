@@ -7,7 +7,7 @@ import sys
 
 if len(sys.argv) > 1:
     print("import boa vista xgboost")
-    import boavista_xgboost as xgb
+    import cythonize_xgboost as xgb
 else:
     print("import default xgboost")
     import xgboost as xgb
