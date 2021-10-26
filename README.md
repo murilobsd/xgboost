@@ -85,7 +85,7 @@ xgboost
 ./test_benchmark.py "cythonize"
 ```
 
-Eu recomendo o uso do hyperfine para gerar o benchmark, o software é específico para isso com
+Eu recomendo o uso do [hyperfine](https://github.com/sharkdp/hyperfine) para gerar o benchmark, o software é específico para isso com
 inúmeras features. Por exemplo poderia ser usado da seguinte forma
 
 ```
