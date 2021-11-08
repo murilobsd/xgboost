@@ -137,3 +137,5 @@ demo
 
 # some tests
 */venv/*
+
+python-package/cythonize_xgboost/*.c
