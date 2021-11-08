@@ -3,6 +3,7 @@
 # pylint: disable=too-many-lines, too-many-locals, no-self-use
 """Core XGBoost Library."""
 # pylint: disable=no-name-in-module,import-error
+
 from collections.abc import Mapping
 from typing import List, Optional, Any, Union, Dict, TypeVar
 # pylint: enable=no-name-in-module,import-error
@@ -15,6 +16,8 @@ import json
 import warnings
 from functools import wraps
 from inspect import signature, Parameter
+
+
 
 import numpy as np
 import scipy.sparse
@@ -64,7 +67,7 @@ def from_pystr_to_cstr(data: Union[str, List[str]]):
     raise TypeError()
 
 
-def from_cstr_to_pystr(data, length) -> List[str]:
+cdef from_cstr_to_pystr(data, length):
     """Revert C pointer to Python str
 
     Parameters
@@ -493,7 +496,6 @@ def _deprecate_positional_args(f):
         return f(**kwargs)
 
     return inner_f
-
 
 class DMatrix:  # pylint: disable=too-many-instance-attributes
     """Data Matrix used in XGBoost.
@@ -1264,8 +1266,13 @@ def _get_booster_layer_trees(model: "Booster") -> Tuple[int, int]:
     num_groups = int(config["learner"]["learner_model_param"]["num_class"])
     return num_parallel_tree, num_groups
 
+# cdef struct _handle:
+#   void * data
+# ctypedef _handle handle
+import cython
 
-class Booster(object):
+@cython.embedsignature(True)
+cdef class Booster(object):
     # pylint: disable=too-many-public-methods
     """A Booster of XGBoost.
 
@@ -1273,7 +1280,7 @@ class Booster(object):
     training, prediction and evaluation.
     """
 
-    def __init__(self, params=None, cache=(), model_file=None):
+    cdef __init__(self, params=None, cache=(), model_file=None):
         # pylint: disable=invalid-name
         """
         Parameters
@@ -1290,7 +1297,11 @@ class Booster(object):
                 raise TypeError(f'invalid cache item: {type(d).__name__}', cache)
 
         dmats = c_array(ctypes.c_void_p, [d.handle for d in cache])
+
         self.handle = ctypes.c_void_p()
+
+        print(self.handle)
+
         _check_call(_LIB.XGBoosterCreate(dmats, c_bst_ulong(len(cache)),
                                          ctypes.byref(self.handle)))
         for d in cache:
@@ -1780,7 +1791,7 @@ class Booster(object):
         pred_contribs: bool = False,
         approx_contribs: bool = False,
         pred_interactions: bool = False,
-        validate_features: bool = True,
+        validate_features: bool = False,
         training: bool = False,
         iteration_range: Tuple[int, int] = (0, 0),
         strict_shape: bool = False,
@@ -2430,7 +2441,7 @@ class Booster(object):
         # pylint: disable=no-member
         return df.sort(['Tree', 'Node']).reset_index(drop=True)
 
-    def _validate_features(self, data: DMatrix):
+    cdef _validate_features(self, data: DMatrix):
         """
         Validate Booster and data's feature_names are identical.
         Set feature_names and feature_types from DMatrix
