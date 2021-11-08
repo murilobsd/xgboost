@@ -599,7 +599,7 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
 
         if _is_iter(data):
             self._init_from_iter(data, enable_categorical)
-            assert <object>self.handle is not None
+            assert self.handle is not None
             return
 
         handle, feature_names, feature_types = dispatch_data_backend(
@@ -611,7 +611,7 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
             enable_categorical=enable_categorical,
         )
         assert handle is not None
-        self.handle = <void *>handle
+        self.handle = handle
 
         self.set_info(
             label=label,
@@ -654,11 +654,11 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
         it._reraise()
         # delay check_call to throw intermediate exception first
         _check_call(ret)
-        self.handle = <void *>handle
+        self.handle = handle
 
     def __del__(self):
         if hasattr(self, "handle") and self.handle:
-            _check_call(_LIB.XGDMatrixFree(<object>self.handle))
+            _check_call(_LIB.XGDMatrixFree(self.handle))
             self.handle = None
 
     @_deprecate_positional_args
@@ -716,7 +716,7 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
         """
         length = c_bst_ulong()
         ret = ctypes.POINTER(ctypes.c_float)()
-        _check_call(_LIB.XGDMatrixGetFloatInfo(<object>self.handle,
+        _check_call(_LIB.XGDMatrixGetFloatInfo(self.handle,
                                                c_str(field),
                                                ctypes.byref(length),
                                                ctypes.byref(ret)))
@@ -737,7 +737,7 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
         """
         length = c_bst_ulong()
         ret = ctypes.POINTER(ctypes.c_uint)()
-        _check_call(_LIB.XGDMatrixGetUIntInfo(<object>self.handle,
+        _check_call(_LIB.XGDMatrixGetUIntInfo(self.handle,
                                               c_str(field),
                                               ctypes.byref(length),
                                               ctypes.byref(ret)))
@@ -798,7 +798,7 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
             If set, the output is suppressed.
         """
         fname = os.fspath(os.path.expanduser(fname))
-        _check_call(_LIB.XGDMatrixSaveBinary(<object>self.handle,
+        _check_call(_LIB.XGDMatrixSaveBinary(self.handle,
                                              c_str(fname),
                                              ctypes.c_int(silent)))
 
@@ -895,7 +895,7 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
         number of rows : int
         """
         ret = c_bst_ulong()
-        _check_call(_LIB.XGDMatrixNumRow(<object>self.handle,
+        _check_call(_LIB.XGDMatrixNumRow(self.handle,
                                          ctypes.byref(ret)))
         return ret.value
 
@@ -907,7 +907,7 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
         number of columns : int
         """
         ret = c_bst_ulong()
-        _check_call(_LIB.XGDMatrixNumCol(<object>self.handle, ctypes.byref(ret)))
+        _check_call(_LIB.XGDMatrixNumCol(self.handle, ctypes.byref(ret)))
         return ret.value
 
     def slice(
@@ -1022,7 +1022,7 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
         """
         length = c_bst_ulong()
         sarr = ctypes.POINTER(ctypes.c_char_p)()
-        _check_call(_LIB.XGDMatrixGetStrFeatureInfo(<object>self.handle,
+        _check_call(_LIB.XGDMatrixGetStrFeatureInfo(self.handle,
                                                     c_str('feature_type'),
                                                     ctypes.byref(length),
                                                     ctypes.byref(sarr)))
@@ -1089,15 +1089,15 @@ class _ProxyDMatrix(DMatrix):
     """
 
     def __init__(self):  # pylint: disable=super-init-not-called
-        self.handle = <void *>ctypes.c_void_p()
-        _check_call(_LIB.XGProxyDMatrixCreate(ctypes.byref(<object>self.handle)))
+        self.handle = ctypes.c_void_p()
+        _check_call(_LIB.XGProxyDMatrixCreate(ctypes.byref(self.handle)))
 
     def _set_data_from_cuda_interface(self, data):
         """Set data from CUDA array interface."""
         interface = data.__cuda_array_interface__
         interface_str = bytes(json.dumps(interface, indent=2), "utf-8")
         _check_call(
-            _LIB.XGProxyDMatrixSetDataCudaArrayInterface(<object>self.handle, interface_str)
+            _LIB.XGProxyDMatrixSetDataCudaArrayInterface(self.handle, interface_str)
         )
 
     def _set_data_from_cuda_columnar(self, data):
@@ -1105,14 +1105,14 @@ class _ProxyDMatrix(DMatrix):
         from .data import _cudf_array_interfaces
 
         _, interfaces_str = _cudf_array_interfaces(data)
-        _check_call(_LIB.XGProxyDMatrixSetDataCudaColumnar(<object>self.handle, interfaces_str))
+        _check_call(_LIB.XGProxyDMatrixSetDataCudaColumnar(self.handle, interfaces_str))
 
     def _set_data_from_array(self, data: np.ndarray):
         """Set data from numpy array."""
         from .data import _array_interface
 
         _check_call(
-            _LIB.XGProxyDMatrixSetDataDense(<object>self.handle, _array_interface(data))
+            _LIB.XGProxyDMatrixSetDataDense(self.handle, _array_interface(data))
         )
 
     def _set_data_from_csr(self, csr):
@@ -1169,7 +1169,7 @@ class DeviceQuantileDMatrix(DMatrix):
         self._silent = silent  # unused, kept for compatibility
 
         if isinstance(data, ctypes.c_void_p):
-            self.handle = <void *>data
+            self.handle = data
             return
 
         if qid is not None and group is not None:
@@ -1232,7 +1232,7 @@ class DeviceQuantileDMatrix(DMatrix):
         it._reraise()
         # delay check_call to throw intermediate exception first
         _check_call(ret)
-        self.handle = <void *>handle
+        self.handle = handle
 
 
 Objective = Callable[[np.ndarray, DMatrix], Tuple[np.ndarray, np.ndarray]]
@@ -1266,7 +1266,7 @@ def _get_booster_layer_trees(model: "Booster") -> Tuple[int, int]:
     num_groups = int(config["learner"]["learner_model_param"]["num_class"])
     return num_parallel_tree, num_groups
 
-cdef class Booster(object):
+class Booster(object):
     # pylint: disable=too-many-public-methods
     """A Booster of XGBoost.
 
@@ -1274,9 +1274,7 @@ cdef class Booster(object):
     training, prediction and evaluation.
     """
 
-    cdef void *handle
-
-    def __cinit__(self, params=None, cache=(), model_file=None):
+    def __init__(self, params=None, cache=(), model_file=None):
         # pylint: disable=invalid-name
         """
         Parameters
@@ -1294,16 +1292,16 @@ cdef class Booster(object):
 
         dmats = c_array(ctypes.c_void_p, [d.handle for d in cache])
 
-        self.handle = <void *>ctypes.c_void_p()
+        self.handle = ctypes.c_void_p()
 
         _check_call(_LIB.XGBoosterCreate(dmats, c_bst_ulong(len(cache)),
-                                         ctypes.byref(<object>self.handle)))
+                                         ctypes.byref(self.handle)))
         for d in cache:
             # Validate feature only after the feature names are saved into booster.
             self._validate_features(d)
 
         if isinstance(model_file, Booster):
-            assert <object>self.handle is not None
+            assert self.handle is not None
             # We use the pickle interface for getting memory snapshot from
             # another model, and load the snapshot with this booster.
             state = model_file.__getstate__()
@@ -1312,7 +1310,7 @@ cdef class Booster(object):
             ptr = (ctypes.c_char * len(handle)).from_buffer(handle)
             length = c_bst_ulong(len(handle))
             _check_call(
-                _LIB.XGBoosterUnserializeFromBuffer(<object>self.handle, ptr, length))
+                _LIB.XGBoosterUnserializeFromBuffer(self.handle, ptr, length))
             self.__dict__.update(state)
         elif isinstance(model_file, (STRING_TYPES, os.PathLike, bytearray)):
             self.load_model(model_file)
@@ -1411,9 +1409,9 @@ cdef class Booster(object):
         return params
 
     def __del__(self):
-        if hasattr(self, 'handle') and <object>self.handle is not None:
-            _check_call(_LIB.XGBoosterFree(<object>self.handle))
-            self.handle = <void *>None
+        if hasattr(self, 'handle') and self.handle is not None:
+            _check_call(_LIB.XGBoosterFree(self.handle))
+            self.handle = None
 
     def __getstate__(self):
         # can't pickle ctypes pointers, put model content in bytearray
@@ -1422,7 +1420,7 @@ cdef class Booster(object):
         if handle is not None:
             length = c_bst_ulong()
             cptr = ctypes.POINTER(ctypes.c_char)()
-            _check_call(_LIB.XGBoosterSerializeToBuffer(<object>self.handle,
+            _check_call(_LIB.XGBoosterSerializeToBuffer(self.handle,
                                                         ctypes.byref(length),
                                                         ctypes.byref(cptr)))
             buf = ctypes2buffer(cptr, length.value)
@@ -1471,15 +1469,15 @@ cdef class Booster(object):
         step = ctypes.c_int(step)
 
         sliced_handle = ctypes.c_void_p()
-        status = _LIB.XGBoosterSlice(<object>self.handle, start, stop, step,
+        status = _LIB.XGBoosterSlice(self.handle, start, stop, step,
                                      ctypes.byref(sliced_handle))
         if status == -2:
             raise IndexError('Layer index out of range')
         _check_call(status)
 
         sliced = Booster()
-        _check_call(_LIB.XGBoosterFree(<object>sliced.handle))
-        sliced.handle = <void *>sliced_handle
+        _check_call(_LIB.XGBoosterFree(sliced.handle))
+        sliced.handle = sliced_handle
         return sliced
 
     def save_config(self):
@@ -1491,7 +1489,7 @@ cdef class Booster(object):
         json_string = ctypes.c_char_p()
         length = c_bst_ulong()
         _check_call(_LIB.XGBoosterSaveJsonConfig(
-            <object>self.handle,
+            self.handle,
             ctypes.byref(length),
             ctypes.byref(json_string)))
         json_string = json_string.value.decode()  # pylint: disable=no-member
@@ -1504,7 +1502,7 @@ cdef class Booster(object):
         '''
         assert isinstance(config, str)
         _check_call(_LIB.XGBoosterLoadJsonConfig(
-            <object>self.handle,
+            self.handle,
             c_str(config)))
 
     def __copy__(self):
@@ -1540,7 +1538,7 @@ cdef class Booster(object):
         ret = ctypes.c_char_p()
         success = ctypes.c_int()
         _check_call(_LIB.XGBoosterGetAttr(
-            <object>self.handle, c_str(key), ctypes.byref(ret), ctypes.byref(success)))
+            self.handle, c_str(key), ctypes.byref(ret), ctypes.byref(success)))
         if success.value != 0:
             return py_str(ret.value)
         return None
@@ -1555,7 +1553,7 @@ cdef class Booster(object):
         """
         length = c_bst_ulong()
         sarr = ctypes.POINTER(ctypes.c_char_p)()
-        _check_call(_LIB.XGBoosterGetAttrNames(<object>self.handle,
+        _check_call(_LIB.XGBoosterGetAttrNames(self.handle,
                                                ctypes.byref(length),
                                                ctypes.byref(sarr)))
         attr_names = from_cstr_to_pystr(sarr, length)
@@ -1575,16 +1573,16 @@ cdef class Booster(object):
                     raise ValueError("Set Attr only accepts string values")
                 value = c_str(str(value))
             _check_call(_LIB.XGBoosterSetAttr(
-                <object>self.handle, c_str(key), value))
+                self.handle, c_str(key), value))
 
     def _get_feature_info(self, field: str):
         length = c_bst_ulong()
         sarr = ctypes.POINTER(ctypes.c_char_p)()
-        if not hasattr(self, "handle") or <object>self.handle is None:
+        if not hasattr(self, "handle") or self.handle is None:
             return None
         _check_call(
             _LIB.XGBoosterGetStrFeatureInfo(
-                <object>self.handle, c_str(field), ctypes.byref(length), ctypes.byref(sarr),
+                self.handle, c_str(field), ctypes.byref(length), ctypes.byref(sarr),
             )
         )
         feature_info = from_cstr_to_pystr(sarr, length)
@@ -1613,13 +1611,13 @@ cdef class Booster(object):
             c_feature_info = (ctypes.c_char_p * len(c_feature_info))(*c_feature_info)
             _check_call(
                 _LIB.XGBoosterSetStrFeatureInfo(
-                    <object>self.handle, c_str(field), c_feature_info, c_bst_ulong(len(features))
+                    self.handle, c_str(field), c_feature_info, c_bst_ulong(len(features))
                 )
             )
         else:
             _check_call(
                 _LIB.XGBoosterSetStrFeatureInfo(
-                    <object>self.handle, c_str(field), None, c_bst_ulong(0)
+                    self.handle, c_str(field), None, c_bst_ulong(0)
                 )
             )
 
@@ -1647,7 +1645,7 @@ cdef class Booster(object):
             params = [(params, value)]
         for key, val in params:
             if val is not None:
-                _check_call(_LIB.XGBoosterSetParam(<object>self.handle, c_str(key),
+                _check_call(_LIB.XGBoosterSetParam(self.handle, c_str(key),
                                                    c_str(str(val))))
 
     def update(self, dtrain, iteration, fobj=None):
@@ -1666,10 +1664,10 @@ cdef class Booster(object):
         """
         if not isinstance(dtrain, DMatrix):
             raise TypeError(f"invalid training matrix: {type(dtrain).__name__}")
-        self._validate_features(dtrain)
+        # self._validate_features(dtrain)
 
         if fobj is None:
-            _check_call(_LIB.XGBoosterUpdateOneIter(<object>self.handle,
+            _check_call(_LIB.XGBoosterUpdateOneIter(self.handle,
                                                     ctypes.c_int(iteration),
                                                     dtrain.handle))
         else:
@@ -1700,7 +1698,7 @@ cdef class Booster(object):
             raise TypeError(f"invalid training matrix: {type(dtrain).__name__}")
         self._validate_features(dtrain)
 
-        _check_call(_LIB.XGBoosterBoostOneIter(<object>self.handle, dtrain.handle,
+        _check_call(_LIB.XGBoosterBoostOneIter(self.handle, dtrain.handle,
                                                c_array(ctypes.c_float, grad),
                                                c_array(ctypes.c_float, hess),
                                                c_bst_ulong(len(grad))))
@@ -1733,7 +1731,7 @@ cdef class Booster(object):
         dmats = c_array(ctypes.c_void_p, [d[0].handle for d in evals])
         evnames = c_array(ctypes.c_char_p, [c_str(d[1]) for d in evals])
         msg = ctypes.c_char_p()
-        _check_call(_LIB.XGBoosterEvalOneIter(<object>self.handle,
+        _check_call(_LIB.XGBoosterEvalOneIter(self.handle,
                                               ctypes.c_int(iteration),
                                               dmats, evnames,
                                               c_bst_ulong(len(evals)),
@@ -1904,7 +1902,7 @@ cdef class Booster(object):
         dims = c_bst_ulong()
         _check_call(
             _LIB.XGBoosterPredictFromDMatrix(
-                <object>self.handle,
+                self.handle,
                 data.handle,
                 from_pystr_to_cstr(json.dumps(args)),
                 ctypes.byref(shape),
@@ -2026,7 +2024,7 @@ cdef class Booster(object):
             data, _ = _ensure_np_dtype(data, data.dtype)
             _check_call(
                 _LIB.XGBoosterPredictFromDense(
-                    <object>self.handle,
+                    self.handle,
                     _array_interface(data),
                     from_pystr_to_cstr(json.dumps(args)),
                     p_handle,
@@ -2040,7 +2038,7 @@ cdef class Booster(object):
             csr = data
             _check_call(
                 _LIB.XGBoosterPredictFromCSR(
-                    <object>self.handle,
+                    self.handle,
                     _array_interface(csr.indptr),
                     _array_interface(csr.indices),
                     _array_interface(csr.data),
@@ -2062,7 +2060,7 @@ cdef class Booster(object):
             interface_str = _cuda_array_interface(data)
             _check_call(
                 _LIB.XGBoosterPredictFromCudaArray(
-                    <object>self.handle,
+                    self.handle,
                     interface_str,
                     from_pystr_to_cstr(json.dumps(args)),
                     p_handle,
@@ -2077,7 +2075,7 @@ cdef class Booster(object):
             _, interfaces_str = _cudf_array_interfaces(data)
             _check_call(
                 _LIB.XGBoosterPredictFromCudaColumnar(
-                    <object>self.handle,
+                    self.handle,
                     interfaces_str,
                     from_pystr_to_cstr(json.dumps(args)),
                     p_handle,
@@ -2111,7 +2109,7 @@ cdef class Booster(object):
         if isinstance(fname, (STRING_TYPES, os.PathLike)):  # assume file name
             fname = os.fspath(os.path.expanduser(fname))
             _check_call(_LIB.XGBoosterSaveModel(
-                <object>self.handle, c_str(fname)))
+                self.handle, c_str(fname)))
         else:
             raise TypeError("fname must be a string or os PathLike")
 
@@ -2124,7 +2122,7 @@ cdef class Booster(object):
         """
         length = c_bst_ulong()
         cptr = ctypes.POINTER(ctypes.c_char)()
-        _check_call(_LIB.XGBoosterGetModelRaw(<object>self.handle,
+        _check_call(_LIB.XGBoosterGetModelRaw(self.handle,
                                               ctypes.byref(length),
                                               ctypes.byref(cptr)))
         return ctypes2buffer(cptr, length.value)
@@ -2151,12 +2149,12 @@ cdef class Booster(object):
             # from URL.
             fname = os.fspath(os.path.expanduser(fname))
             _check_call(_LIB.XGBoosterLoadModel(
-                <object>self.handle, c_str(fname)))
+                self.handle, c_str(fname)))
         elif isinstance(fname, bytearray):
             buf = fname
             length = c_bst_ulong(len(buf))
             ptr = (ctypes.c_char * len(buf)).from_buffer(buf)
-            _check_call(_LIB.XGBoosterLoadModelFromBuffer(<object>self.handle, ptr,
+            _check_call(_LIB.XGBoosterLoadModelFromBuffer(self.handle, ptr,
                                                           length))
         else:
             raise TypeError('Unknown file type: ', fname)
@@ -2174,15 +2172,15 @@ cdef class Booster(object):
 
         '''
         rounds = ctypes.c_int()
-        assert <object>self.handle is not None
-        _check_call(_LIB.XGBoosterBoostedRounds(<object>self.handle, ctypes.byref(rounds)))
+        assert self.handle is not None
+        _check_call(_LIB.XGBoosterBoostedRounds(self.handle, ctypes.byref(rounds)))
         return rounds.value
 
     def num_features(self) -> int:
         '''Number of features in booster.'''
         features = ctypes.c_int()
-        assert <object>self.handle is not None
-        _check_call(_LIB.XGBoosterGetNumFeature(<object>self.handle, ctypes.byref(features)))
+        assert self.handle is not None
+        _check_call(_LIB.XGBoosterGetNumFeature(self.handle, ctypes.byref(features)))
         return features.value
 
     def dump_model(self, fout, fmap='', with_stats=False, dump_format="text"):
@@ -2241,7 +2239,7 @@ cdef class Booster(object):
         fmap = os.fspath(os.path.expanduser(fmap))
         length = c_bst_ulong()
         sarr = ctypes.POINTER(ctypes.c_char_p)()
-        _check_call(_LIB.XGBoosterDumpModelEx(<object>self.handle,
+        _check_call(_LIB.XGBoosterDumpModelEx(self.handle,
                                               c_str(fmap),
                                               ctypes.c_int(with_stats),
                                               c_str(dump_format),
@@ -2313,7 +2311,7 @@ cdef class Booster(object):
 
         _check_call(
             _LIB.XGBoosterFeatureScore(
-                <object>self.handle,
+                self.handle,
                 args,
                 ctypes.byref(n_out_features),
                 ctypes.byref(features),
@@ -2435,7 +2433,7 @@ cdef class Booster(object):
         # pylint: disable=no-member
         return df.sort(['Tree', 'Node']).reset_index(drop=True)
 
-    cdef _validate_features(self, data: DMatrix):
+    def _validate_features(self, data: DMatrix):
         """
         Validate Booster and data's feature_names are identical.
         Set feature_names and feature_types from DMatrix
